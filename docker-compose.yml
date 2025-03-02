@@ -29,11 +29,11 @@ services:
       - elk-kafka-network
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.5.0
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.9
     environment:
       - discovery.type=single-node
-      - xpack.security.enabled=true
-      - ELASTIC_PASSWORD=salam
+#      - xpack.security.enabled=true
+#      - ELASTIC_PASSWORD=salam
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
     ports:
       - "9200:9200"
@@ -43,7 +43,7 @@ services:
       - kafka
 
   logstash:
-    image: docker.elastic.co/logstash/logstash:8.5.0
+    image: docker.elastic.co/logstash/logstash:7.17.9
     depends_on:
       - elasticsearch
       - kafka
@@ -53,7 +53,7 @@ services:
       - elk-kafka-network
 
   kibana:
-    image: docker.elastic.co/kibana/kibana:8.5.0
+    image: docker.elastic.co/kibana/kibana:7.17.9
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
