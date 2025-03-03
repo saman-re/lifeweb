@@ -17,7 +17,7 @@ def read_json_file(filename):
 
 data = read_json_file('sample-data.json')
 
-time.sleep(60)
+time.sleep(30)
 
 for d in data:
     p.poll(0)
