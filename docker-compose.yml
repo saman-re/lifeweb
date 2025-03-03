@@ -4,7 +4,10 @@ services:
   python-script:
     build: .
     depends_on:
-      - kafka
+      logstash:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     networks:
       - elk-kafka-network
   zookeeper:
@@ -23,6 +26,11 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    healthcheck:
+      test: [ "CMD", "kafka-topics", "--list", "--bootstrap-server", "localhost:9092" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "9092:9092"
     networks:
@@ -35,29 +43,40 @@ services:
 #      - xpack.security.enabled=true
 #      - ELASTIC_PASSWORD=salam
       - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9200/_cluster/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     ports:
       - "9200:9200"
     networks:
       - elk-kafka-network
-    depends_on:
-      - kafka
 
   logstash:
     image: docker.elastic.co/logstash/logstash:7.17.9
     depends_on:
-      - elasticsearch
-      - kafka
+      elasticsearch:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     volumes:
       - ./logstash.conf:/usr/share/logstash/pipeline/logstash.conf
     networks:
       - elk-kafka-network
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:9600/_node/stats" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   kibana:
     image: docker.elastic.co/kibana/kibana:7.17.9
     environment:
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
     depends_on:
-      - elasticsearch
+      elasticsearch:
+        condition: service_healthy
     ports:
       - "5601:5601"
     networks:
